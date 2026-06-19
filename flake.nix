@@ -1,5 +1,5 @@
 {
-  description = "LaTeX environment (uplatex/dvipdfmx based, Japanese-ready)";
+  description = "LaTeX toolchain (uplatex/dvipdfmx based, Japanese-ready) for per-project flakes";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -23,28 +23,17 @@
             latexmk; # build driver
         };
 
-        # Bundled config files
-        latexmkrc = ./config/latexmkrc;
-
-        # Wrap latexmk so it always loads the bundled .latexmkrc
-        latexmk = pkgs.writeShellScriptBin "latexmk" ''
-          exec ${texEnv}/bin/latexmk -r ${latexmkrc} "$@"
-        '';
-
-        # Supporting tools used by the LaTeX toolchain
-        extraTools = [
+        # The toolchain: plain latexmk (it reads the per-project ./.latexmkrc by
+        # itself; no global config is injected) plus supporting tools.
+        tools = [
+          texEnv
           pkgs.ghostscript
           pkgs.gnuplot
         ];
 
-        # Single package that bundles everything. The latexmk wrapper shadows
-        # the one shipped inside texEnv via a higher priority.
         latex = pkgs.buildEnv {
           name = "latex-env";
-          paths = [
-            (pkgs.lib.hiPrio latexmk)
-            texEnv
-          ] ++ extraTools;
+          paths = tools;
         };
       in
       {
@@ -54,16 +43,24 @@
         };
 
         devShells.default = pkgs.mkShell {
-          packages = [ latexmk texEnv ] ++ extraTools;
+          packages = tools;
         };
 
-        # `nix run` -> build a document with latexmk
+        # `nix run` -> latexmk in the current directory (uses ./.latexmkrc)
         apps.default = {
           type = "app";
-          program = "${latexmk}/bin/latexmk";
-          meta.description = "Run latexmk with the bundled .latexmkrc";
+          program = "${texEnv}/bin/latexmk";
+          meta.description = "Run latexmk from the current directory";
         };
 
         formatter = pkgs.nixpkgs-fmt;
-      });
+      })
+    // {
+      # `nix flake init -t github:mimifuwacc/nix-latex` to scaffold a project
+      # whose flake provides this toolchain and whose repo owns the .latexmkrc.
+      templates.default = {
+        path = ./template;
+        description = "LaTeX project (uplatex/dvipdfmx) using nix-latex";
+      };
+    };
 }

@@ -1,0 +1,18 @@
+# latexmk / TeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.idx
+*.ilg
+*.ind
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.dvi
+*.pdf
+
+# direnv
+.direnv/
