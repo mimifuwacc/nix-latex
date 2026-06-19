@@ -1,43 +1,72 @@
 # nix-latex
 
-uplatex + dvipdfmx ベースの日本語対応 LaTeX 環境を提供する Nix flake です。
+uplatex + dvipdfmx ベースの日本語対応 LaTeX ツールチェインを提供する Nix flake です。
+**プロジェクトごとの flake から利用する**ことを前提にしています。latexmk の設定
+(`.latexmkrc`) はグローバルに展開せず、各プロジェクトのリポジトリが持ちます。
 
 > [!NOTE]
-> `config/latexmkrc` のフォント探索パス (`OSFONTDIR`) は macOS 前提です。
+> 同梱の `.latexmkrc` のフォント探索パス (`OSFONTDIR`) は macOS 前提です。
 > Linux でもビルド・コンパイルは可能ですが、システムフォントの探索は効きません。
 
-## 使い方
-
-### dev shell に入る
+## クイックスタート（新規プロジェクト）
 
 ```sh
-nix develop
+mkdir mydoc && cd mydoc
+nix flake init -t github:mimifuwacc/nix-latex   # flake.nix / .latexmkrc / main.tex / .gitignore を生成
+nix develop                                     # ツールチェインの入ったシェルに入る
+latexmk main.tex                                # cwd の .latexmkrc を読んで uplatex -> dvipdfmx
 ```
 
-`latexmk` は `config/latexmkrc` を読み込むラッパーに差し替わっており、
-`uplatex` `dvipdfmx` `upbibtex` `mendex` `gs` `gnuplot` などもそのまま使えます。
+テンプレートが置く `.latexmkrc` はそのプロジェクトの一部です。latexmk は実行ディレクトリの
+`.latexmkrc` を自動的に読むため、グローバルな設定注入は一切ありません。
 
-```sh
-latexmk main.tex   # uplatex -> dvipdfmx で PDF を生成
-```
+## 既存プロジェクトに組み込む
 
-### そのままビルドする
-
-```sh
-nix run github:mimifuwacc/nix-latex -- main.tex
-```
-
-### インストール / 他 flake から使う
-
-```sh
-nix profile install github:mimifuwacc/nix-latex
-```
+プロジェクトの `flake.nix`:
 
 ```nix
 {
-  inputs.nix-latex.url = "github:mimifuwacc/nix-latex";
-  # 例: home.packages = [ nix-latex.packages.${system}.default ];
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+    nix-latex.url = "github:mimifuwacc/nix-latex";
+  };
+  outputs = { self, nixpkgs, flake-utils, nix-latex }:
+    flake-utils.lib.eachDefaultSystem (system: {
+      devShells.default = nix-latex.devShells.${system}.default;
+    });
 }
+```
+
+`.latexmkrc` はリポジトリ直下に置きます（テンプレートのものをコピーするのが手軽です）。
+エディタ統合（VSCode LaTeX Workshop など）は [direnv](https://direnv.net/) で
+`use flake` し、ツールをプロジェクトのシェルから拾わせるのがおすすめです。
+
+## 別のパッケージを足して使う
+
+プロジェクト固有のツール（図版生成・変換など）を一緒に使いたいときは、
+`inputsFrom` で nix-latex の devShell を取り込みつつ `packages` に追加します。
+
+```nix
+outputs = { self, nixpkgs, flake-utils, nix-latex }:
+  flake-utils.lib.eachDefaultSystem (system:
+    let pkgs = nixpkgs.legacyPackages.${system};
+    in {
+      devShells.default = pkgs.mkShell {
+        inputsFrom = [ nix-latex.devShells.${system}.default ];
+        packages = [ pkgs.pandoc pkgs.imagemagick ]; # 好きなものを追加
+      };
+    });
+```
+
+`nix develop` すると latexmk/uplatex などに加えて `pandoc` `imagemagick` も
+PATH に乗ります。
+
+## アドホックに使う
+
+```sh
+nix develop github:mimifuwacc/nix-latex          # 一時的にツールチェインを使う
+nix run github:mimifuwacc/nix-latex -- main.tex  # cwd の .latexmkrc で latexmk を実行
 ```
 
 ## 収録パッケージ
