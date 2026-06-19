@@ -20,22 +20,15 @@
             collection-langjapanese # uplatex/platex, jsclasses, Japanese fonts, langcjk
             collection-latexextra # beamer, jvlisting, tcolorbox, recommended, pictures, ...
             collection-mathscience # amsmath stack, siunitx, bussproofs, science fonts, ...
-            latexmk # build driver
-            latexindent; # formatter
+            latexmk; # build driver
         };
 
         # Bundled config files
         latexmkrc = ./config/latexmkrc;
-        latexindentYaml = ./config/latexindent.yaml;
 
         # Wrap latexmk so it always loads the bundled .latexmkrc
         latexmk = pkgs.writeShellScriptBin "latexmk" ''
           exec ${texEnv}/bin/latexmk -r ${latexmkrc} "$@"
-        '';
-
-        # Wrap latexindent so it uses the bundled settings by default
-        latexindent = pkgs.writeShellScriptBin "latexindent" ''
-          exec ${texEnv}/bin/latexindent -l=${latexindentYaml} "$@"
         '';
 
         # Supporting tools used by the LaTeX toolchain
@@ -44,13 +37,12 @@
           pkgs.gnuplot
         ];
 
-        # Single package that bundles everything. The wrappers shadow the
-        # latexmk/latexindent shipped inside texEnv via a higher priority.
+        # Single package that bundles everything. The latexmk wrapper shadows
+        # the one shipped inside texEnv via a higher priority.
         latex = pkgs.buildEnv {
           name = "latex-env";
           paths = [
             (pkgs.lib.hiPrio latexmk)
-            (pkgs.lib.hiPrio latexindent)
             texEnv
           ] ++ extraTools;
         };
@@ -62,7 +54,7 @@
         };
 
         devShells.default = pkgs.mkShell {
-          packages = [ latexmk latexindent texEnv ] ++ extraTools;
+          packages = [ latexmk texEnv ] ++ extraTools;
         };
 
         # `nix run` -> build a document with latexmk
