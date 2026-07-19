@@ -1,0 +1,23 @@
+{
+  // Build with latexmk; engine/dvipdfmx/synctex come from ./.latexmkrc,
+  // so the tool args stay minimal.
+  "latex-workshop.latex.tools": [
+    {
+      "name": "latexmk",
+      "command": "latexmk",
+      "args": ["-synctex=1", "-interaction=nonstopmode", "%DOC%"]
+    }
+  ],
+  "latex-workshop.latex.recipes": [
+    { "name": "latexmk", "tools": ["latexmk"] }
+  ],
+  "latex-workshop.latex.recipe.default": "latexmk",
+
+  // Format with latexindent (default settings).
+  "latex-workshop.formatting.latex": "latexindent",
+  "latex-workshop.formatting.latexindent.args": [
+    "-c", "%DIR%/", "%TMPFILE%", "-r"
+  ],
+
+  "latex-workshop.view.pdf.viewer": "tab"
+}

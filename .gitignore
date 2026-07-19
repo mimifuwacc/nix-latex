@@ -1,1 +1,5 @@
 result
+
+!flake.lock
+!flake.nix
+!.envrc
