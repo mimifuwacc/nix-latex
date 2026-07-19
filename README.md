@@ -71,7 +71,7 @@ nix run github:mimifuwacc/nix-latex -- main.tex  # cwd の .latexmkrc で latexm
 
 ## 収録パッケージ
 
-TeX Live は次の最小構成で `texlive.combine` しています。下位コレクション
+`texliveSmall` をベースに以下を `withPackages` で追加した構成です。下位コレクション
 (basic / latex / latexrecommended / fontsrecommended / pictures / langcjk) や
 beamer・bxjscls・bussproofs・jvlisting 等は推移的に含まれるため明示しません。
 

@@ -11,17 +11,17 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        # Minimal set of top-level collections; each lower-level collection
-        # (basic, latex, latexrecommended, fontsrecommended, pictures, langcjk)
-        # and packages like beamer/bxjscls/bussproofs/jvlisting are pulled in
-        # transitively, so they are intentionally not listed here.
-        texEnv = pkgs.texlive.combine {
-          inherit (pkgs.texlive)
-            collection-langjapanese # uplatex/platex, jsclasses, Japanese fonts, langcjk
-            collection-latexextra # beamer, jvlisting, tcolorbox, recommended, pictures, ...
-            collection-mathscience # amsmath stack, siunitx, bussproofs, science fonts, ...
-            latexmk; # build driver
-        };
+        # texliveSmall (scheme-small) as the base, plus a minimal set of
+        # top-level collections. Each lower-level collection (basic, latex,
+        # latexrecommended, fontsrecommended, pictures, langcjk) and packages
+        # like beamer/bxjscls/bussproofs/jvlisting are pulled in transitively,
+        # so they are intentionally not listed here.
+        texEnv = pkgs.texliveSmall.withPackages (ps: with ps; [
+          collection-langjapanese # uplatex/platex, jsclasses, Japanese fonts, langcjk
+          collection-latexextra # beamer, jvlisting, tcolorbox, recommended, pictures, ...
+          collection-mathscience # amsmath stack, siunitx, bussproofs, science fonts, ...
+          latexmk # build driver
+        ]);
 
         # The toolchain: plain latexmk (it reads the per-project ./.latexmkrc by
         # itself; no global config is injected) plus supporting tools.
