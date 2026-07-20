@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    // Build/preview/format LaTeX (this workspace's settings target it).
+    "James-Yu.latex-workshop",
+    // Load the Nix dev shell (.envrc) so latexmk etc. are on PATH.
+    "mkhl.direnv"
+  ]
+}
