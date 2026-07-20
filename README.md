@@ -1,47 +1,35 @@
-# nix-latex
+# nix-latex-sci
 
-uplatex + dvipdfmx ベースの日本語対応 LaTeX ツールチェインを提供する Nix flake です。
-**プロジェクトごとの flake から利用する**前提で、latexmk の設定 (`.latexmkrc`) は
-グローバルに展開せず各プロジェクトのリポジトリが持ちます。
+uplatex + dvipdfmx ベースの、日本語・理工系向け LaTeX ツールチェインを提供する Nix flake です。
+latexmk の設定 (`.latexmkrc`) はグローバルに置かず、プロジェクトごとの flake から利用します。
 
 > [!NOTE]
-> 同梱の `.latexmkrc` のフォント探索パス (`OSFONTDIR`) は macOS 前提です。
-> Linux でもビルドは通りますが、システムフォントの探索は効きません。
+> 同梱の `.latexmkrc` はフォント探索パス (`OSFONTDIR`) を macOS 前提にしています。
+> Linux でもビルドは通りますが、システムフォントは探索されません。
 
 ## クイックスタート
 
 ```sh
 mkdir mydoc && cd mydoc
-nix flake init -t github:mimifuwacc/nix-latex   # テンプレートを展開
-nix develop                                     # ツールチェインの入ったシェルに入る
-latexmk main.tex                                # cwd の .latexmkrc を読んで uplatex -> dvipdfmx
+nix flake init -t github:mimifuwacc/nix-latex-sci   # テンプレートを展開
+nix develop                                         # 開発シェルに入る
+latexmk main.tex                                    # .latexmkrc に従って uplatex → dvipdfmx
 ```
 
-direnv や VSCode と組み合わせるなら、変種を指定します。
+direnv / VSCode と組み合わせるならバリアントを指定します。
 
 ```sh
-nix flake init -t github:mimifuwacc/nix-latex#vscode
-direnv allow                                    # ツールチェインをエディタに拾わせる
+nix flake init -t github:mimifuwacc/nix-latex-sci#vscode
+direnv allow
 ```
 
-| テンプレート | 中身 |
+| バリアント | 中身 |
 | --- | --- |
 | `default` | `flake.nix` / `.latexmkrc` / `main.tex` / `.gitignore` |
 | `direnv` | 上記 + `.envrc` |
 | `vscode` | 上記 + `.envrc` / `.vscode/settings.json`（LaTeX Workshop 設定） |
 
-`direnv allow` しておくと、VSCode のターミナルや LaTeX Workshop がプロジェクトの
-ツールチェインを自動で拾います。
-
-変種はすべて `template/` 1つのディレクトリから生成しています。エディタを足したい
-ときは、そのファイルを `template/` に置いて `flake.nix` の `variants` に1エントリ
-追加してください。
-
-`nix flake init -t` はテンプレートの中身を cwd にコピーするだけのコマンドです。
-展開後のファイルはプロジェクトのものになり、nix-latex 側の更新には追従しません
-（追従するのは `flake.nix` の input 経由で入るツールチェインだけで、更新は
-`nix flake update`）。既存ファイルは上書きせずエラーになります。ディレクトリごと
-作るなら `nix flake new -t github:mimifuwacc/nix-latex#vscode mydoc`。
+`nix flake init -t` は中身を cwd にコピーするだけで、以降リポジトリ側の更新には追従しません（ツールチェインの更新は `nix flake update`）。ディレクトリごと作るなら `nix flake new -t github:mimifuwacc/nix-latex-sci#vscode mydoc`。
 
 ## 既存プロジェクトに組み込む
 
@@ -50,41 +38,36 @@ direnv allow                                    # ツールチェインをエデ
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    nix-latex.url = "github:mimifuwacc/nix-latex";
+    nix-latex-sci.url = "github:mimifuwacc/nix-latex-sci";
   };
-  outputs = { self, nixpkgs, flake-utils, nix-latex }:
+  outputs = { self, nixpkgs, flake-utils, nix-latex-sci }:
     flake-utils.lib.eachDefaultSystem (system: {
-      devShells.default = nix-latex.devShells.${system}.default;
+      devShells.default = nix-latex-sci.devShells.${system}.default;
     });
 }
 ```
 
-`.latexmkrc` はリポジトリ直下に置きます（テンプレートのものをコピーするのが手軽です）。
-
-プロジェクト固有のツールも一緒に使いたいときは、`inputsFrom` で devShell を
-取り込みつつ `packages` に足します。
+`.latexmkrc` はリポジトリ直下に置きます。プロジェクト固有のツールを足したいときは `inputsFrom` で devShell を取り込みます。
 
 ```nix
 devShells.default = pkgs.mkShell {
-  inputsFrom = [ nix-latex.devShells.${system}.default ];
+  inputsFrom = [ nix-latex-sci.devShells.${system}.default ];
   packages = [ pkgs.pandoc pkgs.imagemagick ];
 };
 ```
 
 ## 収録パッケージ
 
-`texliveSmall` をベースに以下を `withPackages` で追加した構成です。下位コレクション
-(basic / latex / latexrecommended / fontsrecommended / pictures / langcjk) や
-beamer・bxjscls・bussproofs・jvlisting 等は推移的に入るため明示しません。
+`texliveSmall` に以下を `withPackages` で追加しています。下位コレクションや beamer・jvlisting 等は推移的に入ります。
 
 | 指定 | 主な内容 |
 | --- | --- |
-| `collection-langjapanese` | uplatex/platex, jsclasses, 原ノ味フォント, langcjk |
-| `collection-latexextra` | beamer, jvlisting, tcolorbox, latexrecommended, pictures |
+| `collection-langjapanese` | uplatex/platex, jsclasses, 原ノ味フォント |
+| `collection-latexextra` | beamer, tcolorbox, latexrecommended, pictures |
 | `collection-mathscience` | amsmath 系, siunitx, bussproofs, 理工フォント |
-| `latexmk` / `latexindent` | ビルド・整形ツール（latexindent はデフォルト設定） |
+| `latexmk` / `latexindent` | ビルド・整形ツール |
 
-補助ツール: `ghostscript`, `gnuplot`
+補助ツール: `ghostscript`
 
 ## ライセンス
 

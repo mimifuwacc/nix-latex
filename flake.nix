@@ -30,7 +30,6 @@
           tools = [
             texEnv
             pkgs.ghostscript
-            pkgs.gnuplot
           ];
 
           latex = pkgs.buildEnv {
@@ -58,7 +57,7 @@
           formatter = pkgs.nixpkgs-fmt;
         })
     // {
-      # `nix flake init -t github:mimifuwacc/nix-latex[#<variant>]` to scaffold a
+      # `nix flake init -t github:mimifuwacc/nix-latex-sci[#<variant>]` to scaffold a
       # project whose flake provides this toolchain and whose repo owns the
       # .latexmkrc.
       #
@@ -79,15 +78,15 @@
           variants = {
             default = {
               extras = [ ];
-              description = "LaTeX project (uplatex/dvipdfmx) using nix-latex";
+              description = "LaTeX project (uplatex/dvipdfmx) using nix-latex-sci";
             };
             direnv = {
               extras = [ ".envrc" ];
-              description = "LaTeX project using nix-latex, with direnv";
+              description = "LaTeX project using nix-latex-sci, with direnv";
             };
             vscode = {
               extras = [ ".envrc" ".vscode" ];
-              description = "LaTeX project using nix-latex, with VSCode (LaTeX Workshop) + direnv";
+              description = "LaTeX project using nix-latex-sci, with VSCode (LaTeX Workshop) + direnv";
             };
           };
 
@@ -97,7 +96,7 @@
         lib.mapAttrs
           (name: variant: {
             path = builtins.path {
-              name = "nix-latex-template-${name}";
+              name = "nix-latex-sci-template-${name}";
               path = src;
               filter =
                 let
